@@ -1,65 +1,74 @@
-import Image from "next/image";
+"use client";
+
+import { useMemo, useState } from "react";
+import {
+  Activity, AlertTriangle, ArrowDownRight, ArrowUpRight, BarChart3,
+  Bell, ChevronDown, ChevronRight, CircleHelp, Clock3, Download,
+  FileText, Filter, Layers3, Package, PanelRight, Plus, Search,
+  Settings2, Sparkles, Truck, Wifi, X, Zap,
+} from "lucide-react";
+import {
+  Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis,
+} from "recharts";
+
+type Sku = { id: string; name: string; category: string; warehouse: string; units: number; safety: number; price: number; velocity: number; days: number; status: "Healthy" | "Watch" | "Critical"; roq: number };
+
+const baseSkus: Sku[] = [
+  { id: "SKU-10482", name: "Carbon Fiber Bottle 750ml", category: "Hydration", warehouse: "Reno, NV", units: 842, safety: 300, price: 28.5, velocity: 42.8, days: 19.7, status: "Healthy", roq: 960 },
+  { id: "SKU-20391", name: "Performance Running Tee", category: "Apparel", warehouse: "Newark, NJ", units: 184, safety: 240, price: 32, velocity: 18.4, days: 10, status: "Critical", roq: 420 },
+  { id: "SKU-83910", name: "Trail Runner V2", category: "Footwear", warehouse: "Memphis, TN", units: 1240, safety: 500, price: 118, velocity: 31.2, days: 39.7, status: "Healthy", roq: 800 },
+  { id: "SKU-55102", name: "Merino Wool Quarter Zip", category: "Apparel", warehouse: "Reno, NV", units: 392, safety: 400, price: 86, velocity: 26.5, days: 14.8, status: "Watch", roq: 640 },
+  { id: "SKU-77284", name: "Ultralight Daypack 20L", category: "Equipment", warehouse: "Newark, NJ", units: 76, safety: 180, price: 74, velocity: 14.2, days: 5.3, status: "Critical", roq: 360 },
+  { id: "SKU-31048", name: "Alpine Trekking Poles", category: "Equipment", warehouse: "Memphis, TN", units: 618, safety: 250, price: 64, velocity: 11.8, days: 52.4, status: "Healthy", roq: 300 },
+];
+
+const demand = [
+  { day: "Oct 01", demand: 720, stock: 4800 }, { day: "Oct 06", demand: 880, stock: 4450 },
+  { day: "Oct 11", demand: 930, stock: 4100 }, { day: "Oct 16", demand: 1120, stock: 3650 },
+  { day: "Oct 21", demand: 1040, stock: 3200 }, { day: "Oct 26", demand: 1280, stock: 2680 },
+  { day: "Oct 31", demand: 1460, stock: 2050 }, { day: "Nov 05", demand: 1620, stock: 1420 },
+  { day: "Nov 10", demand: 1810, stock: 760 }, { day: "Nov 15", demand: 1960, stock: 120 },
+];
+
+const statusStyles = { Healthy: "text-emerald-300 bg-emerald-400/10 border-emerald-400/20", Watch: "text-amber-300 bg-amber-400/10 border-amber-400/20", Critical: "text-red-300 bg-red-400/10 border-red-400/20" };
 
 export default function Home() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<"All" | Sku["status"]>("All");
+  const [scenario, setScenario] = useState("Baseline model");
+  const [drawer, setDrawer] = useState(false);
+  const [toast, setToast] = useState("");
+  const [skus, setSkus] = useState(baseSkus);
+  const filtered = useMemo(() => skus.filter((s) => (filter === "All" || s.status === filter) && `${s.id} ${s.name} ${s.category}`.toLowerCase().includes(query.toLowerCase())), [skus, filter, query]);
+
+  function simulate(label: string) {
+    setScenario(label);
+    const factor = label.includes("Black Friday") ? 1.45 : label.includes("Crisis") ? 1.8 : 1.18;
+    setSkus(baseSkus.map((s, i) => ({ ...s, units: Math.max(24, Math.round(s.units - s.velocity * factor * (i + 1))), days: +(s.units / (s.velocity * factor)).toFixed(1), status: s.units / (s.velocity * factor) < 8 ? "Critical" : s.units / (s.velocity * factor) < 18 ? "Watch" : "Healthy" })));
+    setToast(`${label} applied · forecast recalculated`);
+    setTimeout(() => setToast(""), 3200);
+  }
+
+  return <main className="min-h-screen bg-[#0b0f19] text-slate-200">
+    <header className="sticky top-0 z-20 border-b border-slate-800/80 bg-[#0b0f19]/95 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-[1600px] items-center justify-between px-5 py-3 lg:px-8">
+        <div className="flex items-center gap-3"><div className="grid h-9 w-9 place-items-center rounded-lg bg-emerald-400 text-[#07110e] shadow-[0_0_22px_rgba(16,185,129,.22)]"><Layers3 size={19} strokeWidth={2.5} /></div><div><div className="text-[14px] font-bold tracking-tight text-white">NORTHSTAR <span className="text-emerald-400">OPS</span></div><div className="font-mono text-[9px] uppercase tracking-[.22em] text-slate-500">Inventory intelligence</div></div></div>
+        <nav className="hidden items-center gap-7 text-[12px] font-medium text-slate-500 md:flex"><span className="border-b-2 border-emerald-400 pb-4 pt-4 text-slate-100">Control center</span><span className="hover:text-slate-200">Forecasts</span><span className="hover:text-slate-200">Purchase orders</span><span className="hover:text-slate-200">Suppliers</span></nav>
+        <div className="flex items-center gap-3"><div className="hidden items-center gap-2 rounded-md border border-slate-800 bg-slate-900/70 px-2.5 py-1.5 font-mono text-[10px] text-emerald-400 sm:flex"><Wifi size={12} /> LIVE <span className="text-slate-600">·</span> 12:48:09 UTC</div><button className="rounded-md p-2 text-slate-500 hover:bg-slate-800 hover:text-white"><Settings2 size={16} /></button><div className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-orange-300 to-orange-600 text-[10px] font-bold text-slate-950">JD</div></div>
+      </div>
+    </header>
+    <div className="mx-auto max-w-[1600px] px-5 py-7 lg:px-8">
+      <section className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-end"><div><div className="mb-2 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[.2em] text-slate-500"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#10b981]" /> Command center / Global inventory</div><h1 className="font-display text-3xl font-semibold tracking-tight text-white sm:text-4xl">Inventory control center</h1><p className="mt-2 text-sm text-slate-500">AI-assisted inventory health, demand signals, and autonomous replenishment.</p></div><div className="flex flex-wrap gap-2"><button onClick={() => setDrawer(true)} className="flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-300 hover:border-slate-500"><Activity size={14} className="text-emerald-400" /> Agent observability</button><button onClick={() => setToast("Export queued · CSV ready in downloads")} className="flex items-center gap-2 rounded-md bg-emerald-400 px-3 py-2 text-xs font-bold text-[#06110d] hover:bg-emerald-300"><Download size={14} /> Export report</button></div></section>
+      <section className="mb-5 overflow-hidden rounded-lg border border-emerald-400/15 bg-gradient-to-r from-emerald-400/[.09] via-slate-900/40 to-blue-500/[.06] px-4 py-3"><div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between"><div className="flex items-center gap-2 text-xs font-semibold text-emerald-200"><Zap size={15} className="fill-emerald-400 text-emerald-400" /> Demo simulation mode <span className="ml-1 rounded bg-emerald-400/15 px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider text-emerald-400">{scenario}</span></div><div className="flex flex-wrap gap-2"><button onClick={() => simulate("Black Friday Demand Surge")} className="sim-btn"><ArrowUpRight size={12} /> Black Friday surge</button><button onClick={() => simulate("Critical Stockout Crisis")} className="sim-btn sim-danger"><AlertTriangle size={12} /> Stockout crisis</button><button onClick={() => simulate("Supply Chain Delay")} className="sim-btn"><Truck size={12} /> Supply chain delay</button></div></div></section>
+      <section className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Metric label="Inventory value" value="$2.84M" delta="+8.4%" sub="vs. previous period" icon={<Package />} color="emerald" /><Metric label="Units on hand" value="24,892" delta="-3.2%" sub="6,431 SKUs tracked" icon={<BarChart3 />} color="blue" /><Metric label="At-risk SKUs" value="18" delta="+4" sub="need attention today" icon={<AlertTriangle />} color="amber" /><Metric label="Predicted stockouts" value="7" delta="in 14 days" sub="confidence 94.2%" icon={<Clock3 />} color="red" /></section>
+      <section className="mb-5 grid gap-3 lg:grid-cols-[1.6fr_1fr]"><div className="panel p-5"><div className="mb-4 flex items-start justify-between"><div><div className="eyebrow">Predictive demand vs. burn-down</div><h2 className="mt-1 text-base font-semibold text-white">Network inventory trajectory</h2></div><div className="flex items-center gap-4 font-mono text-[10px] text-slate-500"><span><i className="legend-dot bg-emerald-400" /> demand index</span><span><i className="legend-dot bg-blue-400" /> units on hand</span><button className="rounded border border-slate-700 px-2 py-1 text-slate-400">30 days <ChevronDown size={12} className="ml-1 inline" /></button></div></div><div className="h-[250px] w-full"><ResponsiveContainer width="100%" height="100%"><AreaChart data={demand} margin={{ top: 8, right: 6, left: -22, bottom: 0 }}><defs><linearGradient id="greenFill" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#10b981" stopOpacity={.25} /><stop offset="95%" stopColor="#10b981" stopOpacity={0} /></linearGradient><linearGradient id="blueFill" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3b82f6" stopOpacity={.15} /><stop offset="95%" stopColor="#3b82f6" stopOpacity={0} /></linearGradient></defs><CartesianGrid stroke="#1e293b" strokeDasharray="3 3" vertical={false} /><XAxis dataKey="day" tick={{ fill: "#64748b", fontSize: 10 }} axisLine={false} tickLine={false} /><YAxis tick={{ fill: "#64748b", fontSize: 10 }} axisLine={false} tickLine={false} /><Tooltip contentStyle={{ background: "#111827", border: "1px solid #334155", borderRadius: 6, fontSize: 11 }} /><Area type="monotone" dataKey="stock" stroke="#60a5fa" strokeWidth={2} fill="url(#blueFill)" /><Area type="monotone" dataKey="demand" stroke="#10b981" strokeWidth={2} fill="url(#greenFill)" /></AreaChart></ResponsiveContainer></div><div className="mt-3 flex items-center gap-2 border-t border-slate-800 pt-3 text-[11px] text-slate-500"><Sparkles size={13} className="text-emerald-400" /> AI signal: demand acceleration detected <span className="font-mono text-emerald-400">+18.6%</span> over trailing 7 days</div></div><div className="panel p-5"><div className="eyebrow">Executive ROI</div><h2 className="mt-1 text-base font-semibold text-white">Autonomous operations impact</h2><div className="mt-5 space-y-5"><Roi label="Stockout risk mitigated" value="99.8%" width="99.8%" color="bg-emerald-400" /><Roi label="Working capital optimized" value="$84,200" width="76%" color="bg-blue-400" /><Roi label="PO automation efficiency" value="+92%" width="92%" color="bg-amber-400" /></div><div className="mt-5 border-t border-slate-800 pt-4 text-[11px] text-slate-500">Last optimized <span className="font-mono text-slate-300">2 minutes ago</span><span className="float-right text-emerald-400">● System healthy</span></div></div></section>
+      <section className="panel overflow-hidden"><div className="flex flex-col gap-3 border-b border-slate-800 p-4 md:flex-row md:items-center md:justify-between"><div><div className="eyebrow">Live inventory feed</div><h2 className="mt-1 text-base font-semibold text-white">SKU health monitor <span className="ml-2 rounded bg-slate-800 px-2 py-1 font-mono text-[10px] text-slate-400">{filtered.length} results</span></h2></div><div className="flex flex-wrap gap-2"><div className="relative"><Search size={14} className="absolute left-3 top-2.5 text-slate-500" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search SKU, name..." className="h-8 w-48 rounded border border-slate-700 bg-slate-950 pl-9 pr-3 text-xs text-slate-200 outline-none placeholder:text-slate-600 focus:border-emerald-400/60" /></div><button className="flex h-8 items-center gap-2 rounded border border-slate-700 px-3 text-xs text-slate-400"><Filter size={13} /> Filters</button></div></div><div className="flex gap-2 overflow-x-auto border-b border-slate-800 px-4 py-3"><span className="tag-label">Status</span>{(["All", "Critical", "Watch", "Healthy"] as const).map((s) => <button key={s} onClick={() => setFilter(s)} className={`tag ${filter === s ? "tag-active" : ""}`}>{s}{s !== "All" && <b>{skus.filter((x) => x.status === s).length}</b>}</button>)}</div><div className="overflow-x-auto"><table className="w-full min-w-[950px] text-left text-xs"><thead><tr className="border-b border-slate-800 bg-slate-950/30 font-mono text-[10px] uppercase tracking-wider text-slate-600"><th className="px-4 py-3 font-medium">SKU / Product</th><th className="px-4 py-3 font-medium">Category</th><th className="px-4 py-3 font-medium">Warehouse</th><th className="px-4 py-3 text-right font-medium">Units on hand</th><th className="px-4 py-3 text-right font-medium">Velocity / day</th><th className="px-4 py-3 text-right font-medium">Stockout ETA</th><th className="px-4 py-3 font-medium">Health</th><th className="px-4 py-3 text-right font-medium">Action</th></tr></thead><tbody>{filtered.map((s) => <tr key={s.id} className={`border-b border-slate-800/70 transition hover:bg-slate-800/30 ${s.status === "Critical" ? "bg-red-500/[.025]" : ""}`}><td className="px-4 py-3.5"><div className="flex items-center gap-3"><div className={`grid h-8 w-8 place-items-center rounded border ${s.status === "Critical" ? "border-red-400/20 bg-red-400/10 text-red-300" : "border-slate-700 bg-slate-800 text-slate-400"}`}><Package size={14} /></div><div><div className="font-semibold text-slate-200">{s.name}</div><div className="mt-0.5 font-mono text-[10px] text-slate-600">{s.id}</div></div></div></td><td className="px-4 py-3 text-slate-400">{s.category}</td><td className="px-4 py-3 text-slate-400">{s.warehouse}</td><td className="px-4 py-3 text-right"><span className={s.units < s.safety ? "font-bold text-red-300" : "text-slate-200"}>{s.units.toLocaleString()}</span><div className="mt-1 ml-auto h-1 w-16 rounded-full bg-slate-800"><div className={`h-full rounded-full ${s.status === "Critical" ? "bg-red-400" : s.status === "Watch" ? "bg-amber-400" : "bg-emerald-400"}`} style={{ width: `${Math.min(100, s.units / s.safety * 100)}%` }} /></div></td><td className="px-4 py-3 text-right font-mono text-slate-300">{s.velocity.toFixed(1)}</td><td className={`px-4 py-3 text-right font-mono ${s.days < 14 ? "text-red-300" : "text-slate-300"}`}>{s.days} days</td><td className="px-4 py-3"><span className={`inline-flex items-center gap-1.5 rounded border px-2 py-1 text-[10px] font-semibold ${statusStyles[s.status]}`}><span className={`h-1.5 w-1.5 rounded-full ${s.status === "Healthy" ? "bg-emerald-400" : s.status === "Watch" ? "bg-amber-400" : "bg-red-400 animate-pulse"}`} />{s.status}</span></td><td className="px-4 py-3 text-right"><button onClick={() => { setToast(`PO draft created for ${s.id} · ${s.roq} units`); setTimeout(() => setToast(""), 3200); }} className="rounded border border-slate-700 px-2.5 py-1.5 text-[10px] font-semibold text-slate-300 hover:border-emerald-400/50 hover:text-emerald-300">{s.status === "Critical" ? "Generate PO" : "Forecast"}</button></td></tr>)}</tbody></table></div><div className="flex items-center justify-between px-4 py-3 text-[10px] text-slate-600"><span>Showing {filtered.length} of 6 SKUs · Synced 14 seconds ago</span><span className="flex items-center gap-1 text-slate-500"><Bell size={12} className="text-amber-400" /> Alerts enabled</span></div></section>
     </div>
-  );
+    {drawer && <aside className="fixed right-0 top-0 z-40 h-full w-full max-w-md border-l border-slate-700 bg-[#0d1420] p-5 shadow-2xl shadow-black/50"><div className="flex items-center justify-between border-b border-slate-800 pb-4"><div><div className="eyebrow text-emerald-400">Agent observability</div><h2 className="mt-1 text-lg font-semibold text-white">Forecasting run logs</h2></div><button onClick={() => setDrawer(false)} className="rounded p-2 text-slate-500 hover:bg-slate-800 hover:text-white"><X size={18} /></button></div><div className="mt-5 rounded border border-emerald-400/20 bg-emerald-400/[.06] p-3"><div className="flex items-center gap-2 text-xs font-semibold text-emerald-300"><span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#10b981]" /> forecast_sku_demand completed</div><div className="mt-2 font-mono text-[10px] text-slate-500">run_id: fc_7f2a91 · 842ms</div></div><div className="mt-5 space-y-4 font-mono text-[11px]"><Log time="12:48:08.421" text="Loaded 30 days sales history" /><Log time="12:48:08.587" text="Applied weighted moving average" /><Log time="12:48:08.734" text="Detected +18.6% velocity acceleration" accent /><Log time="12:48:08.912" text="Projected stockout timeline" /><Log time="12:48:09.263" text="Calculated optimal ROQ: 420 units" accent /></div><div className="mt-7 border-t border-slate-800 pt-5"><div className="eyebrow">Raw mathematical output</div><pre className="mt-3 overflow-x-auto rounded border border-slate-800 bg-[#080c14] p-3 text-[10px] leading-5 text-slate-400">{`velocity_7d = 18.4 units/day\ntrend_factor = 1.186\nlead_time = 12 days\nsafety_stock = 240 units\n\nstockout_eta = 10.0 days\nrecommended_order = 420 units\nconfidence = 0.942`}</pre></div><button onClick={() => setToast("Detailed logs exported as JSON")} className="mt-5 flex w-full items-center justify-center gap-2 rounded border border-slate-700 py-2.5 text-xs font-semibold text-slate-300 hover:border-slate-500"><Download size={14} /> Export raw logs</button></aside>}
+    {toast && <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-lg border border-emerald-400/30 bg-[#101a1c] px-4 py-3 text-xs font-semibold text-emerald-200 shadow-xl"><Sparkles size={15} className="text-emerald-400" /> {toast}</div>}
+  </main>;
 }
+
+function Metric({ label, value, delta, sub, icon, color }: { label: string; value: string; delta: string; sub: string; icon: React.ReactNode; color: "emerald" | "blue" | "amber" | "red" }) { const iconStyle = { emerald: "bg-emerald-400/10 text-emerald-400", blue: "bg-blue-400/10 text-blue-400", amber: "bg-amber-400/10 text-amber-400", red: "bg-red-400/10 text-red-400" }[color]; return <div className="panel p-4"><div className="flex items-start justify-between"><div className="eyebrow">{label}</div><div className={`rounded-md p-2 ${iconStyle}`}>{icon}</div></div><div className="mt-4 flex items-end gap-2"><div className="font-display text-2xl font-semibold tracking-tight text-white">{value}</div><span className={`mb-1 flex items-center text-[10px] font-semibold ${delta.startsWith("-") ? "text-red-300" : "text-emerald-300"}`}>{delta.startsWith("+") ? <ArrowUpRight size={12} /> : delta.startsWith("-") ? <ArrowDownRight size={12} /> : null}{delta}</span></div><div className="mt-1 text-[11px] text-slate-600">{sub}</div></div> }
+function Roi({ label, value, width, color }: { label: string; value: string; width: string; color: string }) { return <div><div className="mb-2 flex justify-between text-xs"><span className="text-slate-400">{label}</span><b className="font-mono text-slate-200">{value}</b></div><div className="h-1.5 rounded-full bg-slate-800"><div className={`h-full rounded-full ${color}`} style={{ width }} /></div></div> }
+function Log({ time, text, accent }: { time: string; text: string; accent?: boolean }) { return <div className="flex gap-3"><span className="text-slate-600">{time}</span><span className={accent ? "text-emerald-300" : "text-slate-400"}>{text}</span></div> }
